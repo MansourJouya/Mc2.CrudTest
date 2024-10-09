@@ -1,0 +1,245 @@
+﻿@page "/customerslist"
+
+@using Mc2.CrudTest.Presentation.Shared.Models
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Customer List</PageTitle>
+
+<h1>Customer List</h1>
+
+<p>This component demonstrates fetching customer data from the server.</p>
+
+<button class="btn btn-primary mb-3" @onclick="ShowAddCustomerForm">Add Customer</button>
+
+@if (showAddForm)
+{
+    <div class="form-container">
+        <h3>@(isEditing ? "Edit Customer" : "Add Customer")</h3>
+        <EditForm Model="newCustomer" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Customer Input Fields -->
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <InputText id="firstName" @bind-Value="newCustomer.FirstName" />
+            </div>
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <InputText id="lastName" @bind-Value="newCustomer.LastName" />
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <InputText id="email" @bind-Value="newCustomer.Email" />
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number:</label>
+                <InputText id="phoneNumber" @bind-Value="newCustomer.PhoneNumber" />
+            </div>
+            <div class="form-group">
+                <label for="dateOfBirth">Date of Birth:</label>
+                <InputDate id="dateOfBirth" @bind-Value="newCustomer.DateOfBirth" />
+            </div>
+            <div class="form-group">
+                <label for="bankAccountNumber">Bank Account Number:</label>
+                <InputText id="bankAccountNumber" @bind-Value="newCustomer.BankAccountNumber" />
+            </div>
+
+            <!-- Submit and Cancel Buttons -->
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="CancelAdd">Cancel</button>
+        </EditForm>
+    </div>
+}
+
+<!-- Customer List Table -->
+@if (customers == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!customers.Any())
+{
+    <p>No customers found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Date of Birth</th>
+                <th>Bank Account Number</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in customers)
+            {
+                <tr>
+                    <td>@customer.FirstName</td>
+                    <td>@customer.LastName</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.PhoneNumber</td>
+                    <td>@customer.DateOfBirth.ToShortDateString()</td>
+                    <td>@customer.BankAccountNumber</td>
+                    <td>
+                        <button class="btn btn-warning" @onclick="() => EditCustomer(customer)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteCustomer(customer.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    // State variables for managing customer data and form visibility
+    private Customer[]? customers; // Array to hold the list of customers
+    private Customer newCustomer = new Customer(); // Model for the new or edited customer
+    private bool showAddForm = false; // Flag to control the visibility of the add/edit form
+    private bool isEditing = false; // Flag to indicate if we are editing a customer
+    private int editingCustomerId; // ID of the customer being edited
+
+    /// <summary>
+    /// Lifecycle method that runs when the component is initialized.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers(); // Load the initial customer data
+    }
+
+    /// <summary>
+    /// Method to load customers from the server.
+    /// </summary>
+    private async Task LoadCustomers()
+    {
+        customers = await Http.GetFromJsonAsync<Customer[]>("api/customer");
+    }
+
+    /// <summary>
+    /// Method to show the add customer form.
+    /// </summary>
+    private void ShowAddCustomerForm()
+    {
+        newCustomer = new Customer(); // Reset the new customer model
+        showAddForm = true; // Show the add customer form
+        isEditing = false; // Set to add mode
+    }
+
+    /// <summary>
+    /// Prepares the form for editing a customer.
+    /// </summary>
+    /// <param name="customer">The customer to edit.</param>
+    private void EditCustomer(Customer customer)
+    {
+        // Copy the customer data to the newCustomer model for editing
+        newCustomer = new Customer
+            {
+                Id = customer.Id,
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                Email = customer.Email,
+                PhoneNumber = customer.PhoneNumber,
+                DateOfBirth = customer.DateOfBirth,
+                BankAccountNumber = customer.BankAccountNumber
+            };
+
+        showAddForm = true; // Show the edit customer form
+        isEditing = true; // Set to edit mode
+        editingCustomerId = customer.Id; // Store the ID of the customer being edited
+    }
+
+    /// <summary>
+    /// Cancels adding or editing a customer.
+    /// </summary>
+    private void CancelAdd()
+    {
+        showAddForm = false; // Hide the form
+    }
+
+    /// <summary>
+    /// Handles the form submission for adding or editing a customer.
+    /// </summary>
+    private async Task HandleValidSubmit()
+    {
+        if (isEditing)
+        {
+            // Update existing customer
+            var response = await Http.PutAsJsonAsync($"api/customer/{editingCustomerId}", newCustomer);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadCustomers(); // Reload the customers
+                showAddForm = false; // Hide the form
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Error updating customer: {errorMessage}");
+            }
+        }
+        else
+        {
+            // Add new customer
+            var response = await Http.PostAsJsonAsync("api/customer", newCustomer);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadCustomers(); // Reload the customers
+                showAddForm = false; // Hide the form
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Error adding customer: {errorMessage}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Deletes a customer.
+    /// </summary>
+    /// <param name="id">The ID of the customer to delete.</param>
+    private async Task DeleteCustomer(int id)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this customer?");
+        if (confirmed)
+        {
+            await Http.DeleteAsync($"api/customer/{id}");
+            await LoadCustomers(); // Update the customer list after deletion
+        }
+    }
+}
+
+<style>
+    /* Styles for the form container */
+    .form-container {
+        border: 1px solid #ccc; /* Border for the form */
+        border-radius: 5px; /* Rounded corners */
+        padding: 20px; /* Padding inside the form */
+        margin-bottom: 20px; /* Space below the form */
+        background-color: #f9f9f9; /* Light background color */
+        max-width: 400px; /* Maximum width for the form */
+    }
+
+    /* Styles for the form groups */
+    .form-group {
+        margin-bottom: 15px; /* Space between form groups */
+    }
+
+        .form-group label {
+            display: block; /* Display labels on a new line */
+            margin-bottom: 5px; /* Space below labels */
+        }
+
+        /* Styles for input fields */
+        .form-group input,
+        .form-group input[type="date"] {
+            width: 100%; /* Full width for inputs */
+            padding: 8px; /* Padding inside inputs */
+            border: 1px solid #ccc; /* Border for inputs */
+            border-radius: 4px; /* Rounded corners */
+        }
+</style>

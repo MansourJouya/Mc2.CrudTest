@@ -1,0 +1,122 @@
+﻿@page "/Fetchcustomers"
+
+@using Mc2.CrudTest.Presentation.Shared.Models
+@inject HttpClient Http
+
+<PageTitle>Customer List</PageTitle>
+
+<h1>Customer List</h1>
+
+<p>This component demonstrates fetching customer data from the server.</p>
+
+@if (customers == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!customers.Any())
+{
+    <p>No customers found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Date of Birth</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in customers)
+            {
+                <tr>
+                    <td>@customer.FirstName</td>
+                    <td>@customer.LastName</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.PhoneNumber</td>
+                    <td>@customer.DateOfBirth.ToShortDateString()</td>
+                    <td>
+                        <button @onclick="() => EditCustomer(customer)">Edit</button>
+                        <button @onclick="() => DeleteCustomer(customer.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h3>Add / Edit Customer</h3>
+<EditForm Model="selectedCustomer" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>First Name:</label>
+        <InputText @bind-Value="selectedCustomer.FirstName" />
+    </div>
+    <div>
+        <label>Last Name:</label>
+        <InputText @bind-Value="selectedCustomer.LastName" />
+    </div>
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="selectedCustomer.Email" />
+    </div>
+    <div>
+        <label>Phone Number:</label>
+        <InputText @bind-Value="selectedCustomer.PhoneNumber" />
+    </div>
+    <div>
+        <label>Date of Birth:</label>
+        <InputDate @bind-Value="selectedCustomer.DateOfBirth" />
+    </div>
+    <button type="submit">@isEditing ? "Update" : "Add"</button>
+</EditForm>
+
+@code {
+    private Customer[]? customers;
+    private Customer selectedCustomer = new Customer();
+    private bool isEditing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        customers = await Http.GetFromJsonAsync<Customer[]>("api/customer");
+    }
+
+    private void EditCustomer(Customer customer)
+    {
+        selectedCustomer = customer;
+        isEditing = true;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (isEditing)
+        {
+            await Http.PutAsJsonAsync($"api/customer/{selectedCustomer.Id}", selectedCustomer);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync("api/customer", selectedCustomer);
+        }
+
+        selectedCustomer = new Customer();
+        isEditing = false;
+        await LoadCustomers();
+    }
+
+    private async Task DeleteCustomer(int id)
+    {
+        await Http.DeleteAsync($"api/customer/{id}");
+        await LoadCustomers();
+    }
+}

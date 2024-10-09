@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <SpecFlowObsoleteCodeBehindFiles Remove="Features\CustomerCreation - Copy.feature.cs" />
+      <SpecFlowObsoleteCodeBehindFiles Remove="Features\CustomerDeletion - Copy.feature.cs" />
+      <SpecFlowObsoleteCodeBehindFiles Remove="Features\CustomerManager - Copy.feature.cs" />
+      <SpecFlowObsoleteCodeBehindFiles Remove="Features\CustomerUpdate - Copy.feature.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="TechTalk.SpecFlow" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+        <PackageReference Include="SpecFlow.Plus.LivingDocPlugin" Version="3.9.57" />
+        <PackageReference Include="SpecFlow.NUnit" Version="3.9.22" />
+        <PackageReference Include="nunit" Version="3.13.2" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Mc2.CrudTest.Presentation\Server\Mc2.CrudTest.Presentation.Server.csproj" />
+      <ProjectReference Include="..\Mc2.CrudTest.Presentation\Shared\Mc2.CrudTest.Presentation.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <SpecFlowFeatureFiles Update="Features\CustomerListing.feature">
+        <Visible>$(UsingMicrosoftNETSdk)</Visible>
+        <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      </SpecFlowFeatureFiles>
+      <SpecFlowFeatureFiles Update="Features\CustomerDeletion.feature">
+        <Visible>$(UsingMicrosoftNETSdk)</Visible>
+        <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      </SpecFlowFeatureFiles>
+      <SpecFlowFeatureFiles Update="Features\CustomerUpdate.feature">
+        <Visible>$(UsingMicrosoftNETSdk)</Visible>
+        <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      </SpecFlowFeatureFiles>
+      <SpecFlowFeatureFiles Update="Features\CustomerCreation.feature">
+        <Visible>$(UsingMicrosoftNETSdk)</Visible>
+        <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      </SpecFlowFeatureFiles>
+    </ItemGroup>
+
+</Project>
