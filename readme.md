@@ -101,4 +101,3 @@ This project implements a simple CRUD application for managing customer data wit
 This CRUD application is developed with a focus on clean coding practices and modern design principles. It successfully implements TDD, BDD, DDD, and CQRS, providing a solid foundation for future enhancements.
 ```
 
-You can copy and paste this content into your `README.md` file on GitHub. Let me know if you need any further adjustments!
